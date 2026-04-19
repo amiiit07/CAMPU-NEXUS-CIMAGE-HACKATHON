@@ -7,16 +7,27 @@ function resolveTenant(request: NextRequest) {
 }
 
 export function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith("/_next") || request.nextUrl.pathname.startsWith("/favicon")) {
+    return NextResponse.next();
+  }
+
   const requestHeaders = new Headers(request.headers);
   const tenant = resolveTenant(request);
   requestHeaders.set("x-tenant-slug", tenant.tenantSlug);
   requestHeaders.set("x-tenant-id", tenant.tenantId);
   requestHeaders.set("x-tenant-mode", request.headers.get("x-tenant-mode") ?? "shared");
-  return NextResponse.next({
+
+  const response = NextResponse.next({
     request: {
       headers: requestHeaders
     }
   });
+
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  return response;
 }
 
 export const config = {

@@ -18,12 +18,16 @@ const userSchema = new Schema(
     tenantId: { type: Schema.Types.ObjectId, ref: "Tenant", index: true, required: true },
     email: { type: String, required: true, index: true },
     name: { type: String, required: true },
+    passwordHash: { type: String, select: false },
     role: { type: String, enum: ["super_admin", "college_admin", "faculty", "student", "startup"], default: "student" },
     authProvider: String,
-    status: { type: String, enum: ["active", "suspended", "pending"], default: "active" }
+    status: { type: String, enum: ["active", "suspended", "pending"], default: "active" },
+    lastLoginAt: Date
   },
   { timestamps: true }
 );
+
+userSchema.index({ tenantId: 1, email: 1 }, { unique: true });
 
 const profileSchema = new Schema(
   {
@@ -71,6 +75,8 @@ const projectSchema = new Schema(
   { timestamps: true }
 );
 
+projectSchema.index({ tenantId: 1, stage: 1, createdAt: -1 });
+
 const teamSchema = new Schema(
   {
     tenantId: { type: Schema.Types.ObjectId, ref: "Tenant", index: true, required: true },
@@ -91,6 +97,8 @@ const applicationSchema = new Schema(
   },
   { timestamps: true }
 );
+
+applicationSchema.index({ tenantId: 1, projectId: 1, userId: 1 }, { unique: true });
 
 const taskSchema = new Schema(
   {
@@ -125,6 +133,8 @@ const messageSchema = new Schema(
   { timestamps: true }
 );
 
+messageSchema.index({ tenantId: 1, roomId: 1, createdAt: -1 });
+
 const ratingSchema = new Schema(
   {
     tenantId: { type: Schema.Types.ObjectId, ref: "Tenant", index: true, required: true },
@@ -157,6 +167,8 @@ const notificationSchema = new Schema(
   },
   { timestamps: true }
 );
+
+notificationSchema.index({ tenantId: 1, userId: 1, read: 1, createdAt: -1 });
 
 const auditLogSchema = new Schema(
   {
@@ -196,6 +208,8 @@ const recommendationSchema = new Schema(
   },
   { timestamps: true }
 );
+
+recommendationSchema.index({ tenantId: 1, userId: 1, createdAt: -1 });
 
 function getModel<T>(name: string, schema: Schema) {
   return (mongoose.models[name] as Model<T>) ?? mongoose.model<T>(name, schema);
