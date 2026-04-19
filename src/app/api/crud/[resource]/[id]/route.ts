@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 import { connectToDatabase } from "@/lib/db";
 import { fail, ok, safeJson } from "@/lib/http";
 import { requireApiAuth } from "@/lib/api-auth";
 import { CRUD_CONFIG, writablePayload } from "@/lib/crud-config";
+import { Profile } from "@/lib/models";
 import { scopeFor, type Resource, type Scope } from "@/lib/rbac";
 
 function isResource(value: string): value is Resource {
@@ -111,6 +113,22 @@ export async function PUT(request: Request, { params }: { params: Promise<{ reso
       payload.participantIds = Array.from(new Set([authResult.auth.userId, ...payload.participantIds]));
     }
 
+    if (resourceRaw === "users") {
+      if (typeof payload.email === "string") {
+        payload.email = payload.email.toLowerCase();
+      }
+
+      if (typeof payload.password === "string") {
+        const rawPassword = payload.password.trim();
+        if (rawPassword.length < 8) {
+          return fail("Password must be at least 8 characters", 400);
+        }
+        payload.passwordHash = await bcrypt.hash(rawPassword, 10);
+      }
+
+      delete payload.password;
+    }
+
     const item = await CRUD_CONFIG[resourceRaw].model.findOneAndUpdate(filter, { $set: payload }, { new: true }).lean();
     if (!item) {
       return fail("Not found", 404);
@@ -150,6 +168,10 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ r
     const item = await CRUD_CONFIG[resourceRaw].model.findOneAndDelete(filter).lean();
     if (!item) {
       return fail("Not found", 404);
+    }
+
+    if (resourceRaw === "users") {
+      await Profile.deleteMany({ userId: item._id });
     }
 
     return ok({ deleted: true, id, resource: resourceRaw });

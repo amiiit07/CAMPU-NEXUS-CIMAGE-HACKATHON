@@ -37,8 +37,8 @@ export const CRUD_CONFIG: Record<Resource, CrudResourceConfig> = {
     ownerField: "_id",
     defaultSort: { createdAt: -1 },
     searchableFields: ["name", "email"],
-    createFields: ["name", "email", "role", "status", "departmentId", "avatarUrl", "authProvider", "isVerified"],
-    updateFields: ["name", "email", "role", "status", "departmentId", "avatarUrl", "authProvider", "isVerified"],
+    createFields: ["name", "email", "password", "role", "status", "departmentId", "avatarUrl", "authProvider", "isVerified"],
+    updateFields: ["name", "email", "password", "role", "status", "departmentId", "avatarUrl", "authProvider", "isVerified"],
     ownUpdateFields: ["name", "avatarUrl"]
   },
   profiles: { model: Profile, ownerField: "userId", defaultSort: { updatedAt: -1 }, searchableFields: ["headline", "bio"] },

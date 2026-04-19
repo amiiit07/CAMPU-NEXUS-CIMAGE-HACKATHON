@@ -97,7 +97,10 @@ export default async function DashboardPage() {
           <p className="mt-3 text-sm text-slate-300">{workflow.title}</p>
           <div className="mt-4 space-y-2 text-sm text-slate-200">
             {workflow.bullets.map((item) => (
-              <div key={item}>• {item}</div>
+              <div key={item} className="flex items-start gap-2">
+                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-cyan-300" />
+                <span>{item}</span>
+              </div>
             ))}
           </div>
           <Link href={workflow.ctaHref} className="mt-5 inline-flex rounded-full bg-cyan-400 px-5 py-2 text-sm font-semibold text-slate-900">

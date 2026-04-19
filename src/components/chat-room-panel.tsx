@@ -10,6 +10,7 @@ type RoomItem = {
   type: string;
   projectId: string | null;
   participantCount: number;
+  isCommunity?: boolean;
 };
 
 type MessageItem = {
@@ -188,7 +189,7 @@ export function ChatRoomPanel({
       <SectionTitle
         eyebrow="Chat rooms"
         title="Realtime collaboration room"
-        description="Open a project room, send messages, or create a fresh collaboration space from the project board."
+        description="Same-college students and college admins can chat in shared community rooms, plus project rooms from the board."
       />
 
       <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
@@ -221,7 +222,14 @@ export function ChatRoomPanel({
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="font-medium text-white">{room.title}</div>
-                    <div className="text-xs uppercase tracking-[0.2em] text-cyan-200">{room.type}</div>
+                    <div className="flex items-center gap-2">
+                      {room.isCommunity ? (
+                        <span className="rounded-full border border-cyan-300/30 bg-cyan-300/10 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-cyan-100">
+                          college
+                        </span>
+                      ) : null}
+                      <div className="text-xs uppercase tracking-[0.2em] text-cyan-200">{room.type}</div>
+                    </div>
                   </div>
                   <div className="mt-2 flex items-center gap-2 text-sm text-slate-300">
                     <Users className="h-4 w-4 text-cyan-200" />

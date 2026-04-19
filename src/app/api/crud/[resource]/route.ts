@@ -1,9 +1,11 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 import { connectToDatabase } from "@/lib/db";
 import { fail, ok, safeJson } from "@/lib/http";
 import { paginationFromSearch } from "@/lib/pagination";
 import { requireApiAuth } from "@/lib/api-auth";
 import { buildSearchFilter, CRUD_CONFIG, writablePayload } from "@/lib/crud-config";
+import { Profile } from "@/lib/models";
 import { scopeFor, type Resource, type Scope } from "@/lib/rbac";
 
 function isResource(value: string): value is Resource {
@@ -135,7 +137,40 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
       payload.participantIds = Array.from(new Set([authResult.auth.userId, ...participantIds]));
     }
 
+    if (resourceRaw === "users") {
+      const rawPassword = typeof payload.password === "string" ? payload.password.trim() : "";
+      if (rawPassword.length < 8) {
+        return fail("Password must be at least 8 characters for new users", 400);
+      }
+
+      payload.email = typeof payload.email === "string" ? payload.email.toLowerCase() : payload.email;
+      payload.passwordHash = await bcrypt.hash(rawPassword, 10);
+      payload.authProvider = typeof payload.authProvider === "string" ? payload.authProvider : "credentials";
+      payload.status = typeof payload.status === "string" ? payload.status : "active";
+      delete payload.password;
+    }
+
     const item = await cfg.model.create(payload);
+
+    if (resourceRaw === "users") {
+      await Profile.findOneAndUpdate(
+        { tenantId: item.tenantId, userId: item._id },
+        {
+          $setOnInsert: {
+            tenantId: item.tenantId,
+            userId: item._id,
+            headline: "",
+            bio: "",
+            skills: [],
+            portfolioLinks: [],
+            badges: [],
+            availability: "open"
+          }
+        },
+        { upsert: true, new: true }
+      );
+    }
+
     return ok({ item, resource: resourceRaw }, 201);
   } catch (error) {
     return fail("Failed to create resource", 500, error instanceof Error ? error.message : "unknown");

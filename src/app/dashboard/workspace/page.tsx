@@ -49,7 +49,7 @@ type MeResp = {
 };
 
 const resourceTemplates: Record<Resource, Record<string, unknown>> = {
-  users: { name: "New User", email: "new.user@campusnexus.dev", role: "student", status: "active" },
+  users: { name: "New User", email: "new.user@campusnexus.dev", password: "Campus@2026", role: "student", status: "active" },
   profiles: { headline: "Full stack builder", bio: "Interested in AI and collaboration systems.", availability: "open" },
   skills: { name: "Next.js", category: "Web" },
   projects: { title: "Campus Collaboration Sprint", summary: "Build a team-ready campus product.", type: "project", stage: "team_forming" },

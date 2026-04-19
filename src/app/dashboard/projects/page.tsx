@@ -1,7 +1,7 @@
 import { ChatRoomPanel } from "@/components/chat-room-panel";
 import { ProjectsBoard } from "@/components/projects-board";
 import { connectToDatabase } from "@/lib/db";
-import { Application, Project, Room, User } from "@/lib/models";
+import { Application, Project, Room, Tenant, User } from "@/lib/models";
 import { getServerAuthContext } from "@/lib/server-auth";
 
 export default async function ProjectsPage() {
@@ -11,6 +11,35 @@ export default async function ProjectsPage() {
   }
 
   await connectToDatabase();
+
+  const tenant = await Tenant.findById(auth.tenantId).select("name").lean();
+  const communityParticipants = await User.find({
+    tenantId: auth.tenantId,
+    status: "active",
+    role: { $in: ["student", "college_admin"] }
+  })
+    .select("_id")
+    .lean();
+
+  const participantIds = communityParticipants.map((user) => user._id);
+  if (participantIds.length > 1) {
+    await Room.findOneAndUpdate(
+      {
+        tenantId: auth.tenantId,
+        type: "group",
+        title: `${tenant?.name ?? "College"} Community Room`
+      },
+      {
+        $set: {
+          participantIds
+        },
+        $setOnInsert: {
+          creatorId: auth.sub
+        }
+      },
+      { upsert: true, new: true }
+    );
+  }
 
   const [projects, applications, rooms] = await Promise.all([
     Project.find({ tenantId: auth.tenantId }).sort({ createdAt: -1 }).lean(),
@@ -44,8 +73,11 @@ export default async function ProjectsPage() {
     title: room.title ?? "Untitled room",
     type: room.type,
     projectId: room.projectId ? room.projectId.toString() : null,
-    participantCount: room.participantIds?.length ?? 0
+    participantCount: room.participantIds?.length ?? 0,
+    isCommunity: (room.title ?? "").includes("Community Room")
   }));
+
+  roomCards.sort((a, b) => Number(b.isCommunity) - Number(a.isCommunity));
 
   return (
     <div className="space-y-10">

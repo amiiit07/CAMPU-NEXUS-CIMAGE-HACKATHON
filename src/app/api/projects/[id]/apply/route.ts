@@ -11,7 +11,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return fail("Invalid project id", 400);
     }
 
-    const authResult = await requireApiAuth(request);
+    const authResult = await requireApiAuth(request, ["student", "startup"]);
     if ("error" in authResult) {
       return fail(authResult.error, authResult.error === "Unauthorized" ? 401 : 403);
     }
@@ -20,6 +20,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const project = await Project.findOne({ _id: id, tenantId: authResult.auth.tenantId }).lean();
     if (!project) {
       return fail("Project not found", 404);
+    }
+
+    if (project.ownerId?.toString() === authResult.auth.userId) {
+      return fail("You cannot apply to your own project", 400);
     }
 
     const application = await Application.findOneAndUpdate(
