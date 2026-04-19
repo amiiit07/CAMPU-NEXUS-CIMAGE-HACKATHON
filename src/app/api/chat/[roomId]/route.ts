@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/db";
-import { Message, Room } from "@/lib/models";
+import { Message, Room, User } from "@/lib/models";
 import { fail, ok } from "@/lib/http";
 import { requireApiAuth } from "@/lib/api-auth";
 import { paginationFromSearch } from "@/lib/pagination";
@@ -35,7 +35,20 @@ export async function GET(request: Request, { params }: { params: Promise<{ room
       .limit(limit)
       .lean();
 
-    return ok({ items: messages.reverse(), page, limit });
+    const senderIds = Array.from(new Set(messages.map((message) => message.senderId?.toString()).filter(Boolean)));
+    const senders = await User.find({ _id: { $in: senderIds }, tenantId: authResult.auth.tenantId })
+      .select("name")
+      .lean();
+    const senderMap = new Map(senders.map((sender) => [sender._id.toString(), sender.name]));
+
+    return ok({
+      items: messages.reverse().map((message) => ({
+        ...message,
+        senderName: senderMap.get(message.senderId.toString()) ?? "Unknown user"
+      })),
+      page,
+      limit
+    });
   } catch (error) {
     return fail("Failed to fetch chat", 500, error instanceof Error ? error.message : "unknown");
   }

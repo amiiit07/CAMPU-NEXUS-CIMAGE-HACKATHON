@@ -1,8 +1,9 @@
 const base = "http://localhost:3000";
 
 class Client {
-  constructor() {
+  constructor(tenantId = "cimage") {
     this.jar = new Map();
+    this.tenantId = tenantId;
   }
 
   cookieHeader() {
@@ -12,14 +13,14 @@ class Client {
   }
 
   async req(path, { method = "GET", body } = {}) {
-    const headers = { "content-type": "application/json" };
+    const headers = { "content-type": "application/json", "x-tenant-id": this.tenantId };
     const cookie = this.cookieHeader();
     if (cookie) {
       headers.cookie = cookie;
     }
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 10_000);
+    const timer = setTimeout(() => controller.abort(), 30_000);
 
     try {
       const response = await fetch(base + path, {
@@ -55,13 +56,13 @@ class Client {
 }
 
 const out = {};
-const admin = new Client();
-const student = new Client();
+const admin = new Client("cimage");
+const student = new Client("cimage");
 
 out.health = await admin.req("/api/health");
 out.loginAdmin = await admin.req("/api/auth/login", {
   method: "POST",
-  body: { email: "superadmin@campusnexus.dev", password: "Password123!" }
+  body: { email: "superadmin@campusnexus.dev", password: "Campus@2026" }
 });
 
 if (out.loginAdmin.status !== 200) {
@@ -69,7 +70,7 @@ if (out.loginAdmin.status !== 200) {
     method: "POST",
     body: {
       email: "superadmin@campusnexus.dev",
-      password: "Password123!",
+      password: "Campus@2026",
       name: "Super Admin",
       role: "super_admin"
     }
@@ -77,22 +78,26 @@ if (out.loginAdmin.status !== 200) {
 
   out.loginAdmin = await admin.req("/api/auth/login", {
     method: "POST",
-    body: { email: "superadmin@campusnexus.dev", password: "Password123!" }
+    body: { email: "superadmin@campusnexus.dev", password: "Campus@2026" }
   });
 }
 
 out.seed = await admin.req("/api/seed", { method: "POST" });
+out.loginAdminAfterSeed = await admin.req("/api/auth/login", {
+  method: "POST",
+  body: { email: "superadmin@campusnexus.dev", password: "Campus@2026" }
+});
 out.loginStudent = await student.req("/api/auth/login", {
   method: "POST",
-  body: { email: "student@alpha.edu", password: "Password123!" }
+  body: { email: "amit.cimage@campusnexus.dev", password: "Campus@2026" }
 });
 
 if (out.loginStudent.status !== 200) {
   out.registerStudent = await student.req("/api/auth/register", {
     method: "POST",
     body: {
-      email: "student@alpha.edu",
-      password: "Password123!",
+      email: "amit.cimage@campusnexus.dev",
+      password: "Campus@2026",
       name: "Demo Student",
       role: "student"
     }
@@ -100,7 +105,7 @@ if (out.loginStudent.status !== 200) {
 
   out.loginStudent = await student.req("/api/auth/login", {
     method: "POST",
-    body: { email: "student@alpha.edu", password: "Password123!" }
+    body: { email: "amit.cimage@campusnexus.dev", password: "Campus@2026" }
   });
 }
 out.project = await admin.req("/api/projects", {
@@ -117,9 +122,10 @@ out.project = await admin.req("/api/projects", {
 });
 
 const projectId = out.project.data?.data?.project?._id;
-const roomId = out.seed.data?.roomId;
+out.rooms = await student.req("/api/chat/rooms");
+const roomId = out.rooms.data?.data?.items?.[0]?._id;
 const studentId = out.loginStudent.data?.data?.user?.id;
-const adminId = out.loginAdmin.data?.data?.user?.id;
+const adminId = out.loginAdminAfterSeed.data?.data?.user?.id ?? out.loginAdmin.data?.data?.user?.id;
 
 if (projectId) {
   out.apply = await student.req(`/api/projects/${projectId}/apply`, { method: "POST" });
@@ -156,8 +162,10 @@ console.log(
         health: out.health.status,
         loginAdmin: out.loginAdmin.status,
         seed: out.seed.status,
+        loginAdminAfterSeed: out.loginAdminAfterSeed.status,
         loginStudent: out.loginStudent.status,
         project: out.project.status,
+        rooms: out.rooms.status,
         apply: out.apply.status,
         accept: out.accept.status,
         chatSend: out.chatSend.status,

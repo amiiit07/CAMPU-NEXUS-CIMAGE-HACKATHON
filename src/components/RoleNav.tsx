@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { motion } from "framer-motion";
+import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Bell, LayoutDashboard, Rocket, ShieldCheck, Sparkles, Users, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,8 +27,9 @@ const navItems: NavItem[] = [
   { href: "/dashboard/workspace", label: "CRUD Studio", icon: Wrench, roles: ["student", "faculty", "college_admin", "super_admin", "startup"] }
 ];
 
-export default function RoleNav() {
+export default function RoleNav({ onNavigate }: { onNavigate?: () => void }) {
   const [role, setRole] = useState<NavRole | null>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     let cancelled = false;
@@ -60,14 +63,23 @@ export default function RoleNav() {
   return (
     <nav className="space-y-2">
       {visibleItems.map((item) => (
-        <Link
+        <motion.div key={item.href} whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300, damping: 24 }}>
+          <Link
           key={item.href}
           href={item.href}
-          className={cn("flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-slate-300 transition hover:bg-white/8 hover:text-white")}
+          onClick={onNavigate}
+          className={cn(
+            "group relative flex items-center gap-3 overflow-hidden rounded-2xl px-4 py-3 text-sm transition",
+            pathname === item.href
+              ? "border border-cyan-300/35 bg-gradient-to-r from-cyan-400/20 to-brand-purple/20 text-white shadow-glow-cyan"
+              : "border border-transparent text-slate-300 hover:border-white/10 hover:bg-white/8 hover:text-white"
+          )}
         >
-          <item.icon className="h-4 w-4 text-cyan-300" />
+          <item.icon className={cn("h-4 w-4", pathname === item.href ? "text-cyan-100" : "text-cyan-300")} />
           {item.label}
-        </Link>
+          {pathname === item.href ? <span className="absolute inset-y-2 left-1 w-1 rounded-full bg-cyan-300" /> : null}
+          </Link>
+        </motion.div>
       ))}
     </nav>
   );

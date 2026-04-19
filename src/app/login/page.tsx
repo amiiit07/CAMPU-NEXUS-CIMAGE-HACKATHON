@@ -4,10 +4,19 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+const tenantOptions = [
+  { value: "cimage", label: "CIMAGE" },
+  { value: "bia-patna", label: "BIA PATNA" },
+  { value: "aia-patna", label: "AIA PATNA" },
+  { value: "iit-patna", label: "IIT PATNA" },
+  { value: "ibm", label: "IBM" }
+];
+
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@campusnexus.dev");
-  const [password, setPassword] = useState("Password123!");
+  const [tenantId, setTenantId] = useState("cimage");
+  const [email, setEmail] = useState("superadmin@campusnexus.dev");
+  const [password, setPassword] = useState("Campus@2026");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -19,7 +28,7 @@ export default function LoginPage() {
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", "x-tenant-id": tenantId },
         body: JSON.stringify({ email, password })
       });
 
@@ -46,6 +55,21 @@ export default function LoginPage() {
         <p className="mt-2 text-sm text-slate-300">Sign in to manage projects, chats, and collaboration workflows.</p>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
+          <div>
+            <label className="mb-1 block text-sm text-slate-300">College / Tenant</label>
+            <select
+              value={tenantId}
+              onChange={(event) => setTenantId(event.target.value)}
+              className="w-full rounded-xl border border-white/15 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300"
+            >
+              {tenantOptions.map((tenant) => (
+                <option key={tenant.value} value={tenant.value}>
+                  {tenant.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <label className="mb-1 block text-sm text-slate-300">Email</label>
             <input
@@ -79,7 +103,13 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-slate-400">
+        <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-slate-300">
+          Super admin default: <span className="font-semibold text-white">superadmin@campusnexus.dev</span> on <span className="font-semibold text-white">CIMAGE</span>
+          <br />
+          Shared demo password: <span className="font-semibold text-white">Campus@2026</span>
+        </div>
+
+        <p className="mt-4 text-center text-xs text-slate-400">
           Need a quick entry point? Go back to <Link href="/" className="text-cyan-300 hover:text-cyan-200">home</Link>.
         </p>
       </div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Brain, Building2, LineChart, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { Card, SectionTitle, StatCard } from "@/components/ui";
+import { GradientBarChart, SplitPieChart, TrendAreaChart } from "@/components/dashboard-charts";
 import { getServerAuthContext } from "@/lib/server-auth";
 
 const stats = [
@@ -56,6 +57,22 @@ export default async function DashboardPage() {
   const auth = await getServerAuthContext();
   const workflow = roleWorkflow[auth?.role ?? "student"];
 
+  const monthly = [
+    { name: "Jan", users: 420, projects: 120 },
+    { name: "Feb", users: 510, projects: 162 },
+    { name: "Mar", users: 580, projects: 205 },
+    { name: "Apr", users: 640, projects: 248 },
+    { name: "May", users: 690, projects: 280 },
+    { name: "Jun", users: 760, projects: 324 }
+  ];
+
+  const split = [
+    { name: "Students", value: 62 },
+    { name: "Faculty", value: 18 },
+    { name: "Admins", value: 12 },
+    { name: "Startups", value: 8 }
+  ];
+
   return (
     <div className="space-y-8">
       <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
@@ -107,6 +124,34 @@ export default async function DashboardPage() {
             <p className="mt-2 text-sm leading-7 text-slate-300">{module.description}</p>
           </Card>
         ))}
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-3">
+        <Card className="xl:col-span-2">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h3 className="text-lg font-semibold">Adoption trend</h3>
+            <span className="text-xs uppercase tracking-[0.2em] text-cyan-200">Monthly active users</span>
+          </div>
+          <TrendAreaChart data={monthly} dataKey="users" xKey="name" color="#7C3AED" />
+        </Card>
+
+        <Card>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h3 className="text-lg font-semibold">Role split</h3>
+            <span className="text-xs uppercase tracking-[0.2em] text-cyan-200">Current usage</span>
+          </div>
+          <SplitPieChart data={split} dataKey="value" nameKey="name" />
+        </Card>
+      </section>
+
+      <section>
+        <Card>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h3 className="text-lg font-semibold">Project throughput</h3>
+            <span className="text-xs uppercase tracking-[0.2em] text-cyan-200">Generated monthly</span>
+          </div>
+          <GradientBarChart data={monthly} dataKey="projects" xKey="name" color="#06B6D4" />
+        </Card>
       </section>
     </div>
   );
