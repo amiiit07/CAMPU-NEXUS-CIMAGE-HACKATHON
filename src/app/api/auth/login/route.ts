@@ -26,11 +26,18 @@ export async function POST(request: Request) {
       return fail("Invalid credentials", 401);
     }
 
+    if (user.status !== "active") {
+      return fail("Account is not active", 403);
+    }
+
     const passwordOk = await bcrypt.compare(parsed.data.password, user.passwordHash);
     if (!passwordOk) {
+      user.failedLoginCount = (user.failedLoginCount ?? 0) + 1;
+      await user.save();
       return fail("Invalid credentials", 401);
     }
 
+    user.failedLoginCount = 0;
     user.lastLoginAt = new Date();
     await user.save();
 

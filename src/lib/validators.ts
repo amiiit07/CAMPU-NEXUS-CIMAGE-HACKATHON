@@ -12,6 +12,20 @@ export const loginSchema = z.object({
   password: z.string().min(1)
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().email()
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(20),
+  password: z.string().min(8).max(100)
+});
+
+export const updatePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8).max(100)
+});
+
 export const profileSchema = z.object({
   headline: z.string().max(120).optional(),
   bio: z.string().max(1000).optional(),
@@ -41,4 +55,13 @@ export const ratingSchema = z.object({
   subjectId: z.string().min(1),
   score: z.number().int().min(1).max(5),
   category: z.string().min(2).max(40)
+});
+
+export const tenantUpdateSchema = z.object({
+  name: z.string().min(2).max(120).optional(),
+  logoUrl: z.string().url().optional(),
+  brandColor: z.string().max(32).optional(),
+  status: z.enum(["active", "paused", "trial", "suspended"]).optional(),
+  subscriptionPlan: z.enum(["free", "pro", "enterprise"]).optional(),
+  contactEmail: z.string().email().optional()
 });

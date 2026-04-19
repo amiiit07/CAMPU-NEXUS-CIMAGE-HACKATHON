@@ -1,4 +1,5 @@
 import { Card, SectionTitle } from "@/components/ui";
+import { requireDashboardRole } from "@/lib/dashboard-guards";
 
 const tenantRows = [
   ["Total colleges", "128"],
@@ -7,7 +8,8 @@ const tenantRows = [
   ["Abuse reports", "3 open"]
 ];
 
-export default function AdminDashboardPage() {
+export default async function AdminDashboardPage() {
+  await requireDashboardRole(["college_admin", "super_admin"]);
   return (
     <div className="space-y-8">
       <SectionTitle

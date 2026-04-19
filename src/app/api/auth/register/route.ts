@@ -19,6 +19,11 @@ export async function POST(request: Request) {
       return fail("Invalid request body", 400, parsed.error.flatten());
     }
 
+    const requestedRole = parsed.data.role ?? "student";
+    if (["super_admin", "college_admin"].includes(requestedRole)) {
+      return fail("Role is not allowed for self-registration", 403);
+    }
+
     await connectToDatabase();
     const tenant = await resolveTenantRecord(tenantFromRequest(request));
     const existing = await User.findOne({ tenantId: tenant._id, email: parsed.data.email.toLowerCase() }).lean();
@@ -32,7 +37,7 @@ export async function POST(request: Request) {
       email: parsed.data.email.toLowerCase(),
       name: sanitizeText(parsed.data.name),
       passwordHash,
-      role: parsed.data.role ?? "student",
+      role: requestedRole,
       authProvider: "credentials",
       status: "active"
     });

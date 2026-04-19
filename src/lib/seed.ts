@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { connectToDatabase } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { Project, Room, Tenant, User } from "@/lib/models";
@@ -7,8 +8,8 @@ async function seed() {
   await connectToDatabase();
 
   const tenant = await Tenant.findOneAndUpdate(
-    { slug: "campus-nexus" },
-    { slug: "campus-nexus", name: "Campus Nexus Demo", brandColor: "#22d3ee", subdomain: "demo", isolationMode: "shared" },
+    { slug: "campus-demo" },
+    { slug: "campus-demo", name: "Campus Nexus Demo", brandColor: "#22d3ee", subdomain: "demo", isolationMode: "shared" },
     { upsert: true, new: true }
   );
 

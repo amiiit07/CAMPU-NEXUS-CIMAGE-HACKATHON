@@ -12,9 +12,10 @@
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "clsx": "^2.1.1",
     "cloudinary": "^2.5.1",
+    "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.4.2",
     "framer-motion": "^12.7.4",
     "ioredis": "^5.6.1",
     "lucide-react": "^0.487.0",

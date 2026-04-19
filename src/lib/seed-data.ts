@@ -5,6 +5,8 @@ export const seedTenants = [
 
 export const seedUsers = [
   { email: "admin@campusnexus.dev", name: "Aarav Shah", role: "super_admin" },
+  { email: "college.admin@campusnexus.dev", name: "Ritika Verma", role: "college_admin" },
+  { email: "college.admin2@campusnexus.dev", name: "Karan Mehta", role: "college_admin" },
   { email: "faculty@alpha.edu", name: "Dr. Meera Iyer", role: "faculty" },
   { email: "student@alpha.edu", name: "Nina Patel", role: "student" }
 ];

@@ -1,15 +1,7 @@
-import Link from "next/link";
-import { LayoutDashboard, ShieldCheck, Sparkles, Users, Rocket, Bell } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
-
-const navItems = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/admin", label: "College Admin", icon: ShieldCheck },
-  { href: "/dashboard/student", label: "Student Hub", icon: Users },
-  { href: "/dashboard/projects", label: "Projects", icon: Rocket },
-  { href: "/dashboard/notifications", label: "Alerts", icon: Bell }
-];
+import AuthActions from "@/components/AuthActions";
+import RoleNav from "@/components/RoleNav";
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   return (
@@ -25,22 +17,12 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               <div className="text-xs uppercase tracking-[0.3em] text-slate-400">Federated SaaS</div>
             </div>
           </div>
-          <nav className="space-y-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-slate-300 transition hover:bg-white/8 hover:text-white"
-                )}
-              >
-                <item.icon className="h-4 w-4 text-cyan-300" />
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <RoleNav />
           <div className="mt-8 rounded-2xl border border-cyan-400/20 bg-cyan-400/10 p-4 text-sm text-cyan-50">
             AI teammate finder, cross-college rooms, and tenant-safe analytics are active in this demo shell.
+          </div>
+          <div className="mt-5 rounded-2xl border border-white/15 bg-white/5 p-4">
+            <AuthActions compact />
           </div>
         </aside>
         <main className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-glow backdrop-blur-xl lg:p-6">{children}</main>

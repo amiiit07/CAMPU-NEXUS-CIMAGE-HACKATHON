@@ -3,6 +3,7 @@
 import { Sparkles } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import AuthActions from "@/components/AuthActions";
 
 const links = [
   { label: "Features", href: "#features" },
@@ -34,14 +35,17 @@ export default function Navbar() {
           ))}
         </div>
 
-        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center rounded-xl bg-gradient-to-r from-brand-purple to-brand-cyan px-5 py-2.5 text-sm font-semibold text-white shadow-glow-purple"
-          >
-            Launch App
-          </Link>
-        </motion.div>
+        <div className="flex items-center gap-3">
+          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center rounded-xl bg-gradient-to-r from-brand-purple to-brand-cyan px-5 py-2.5 text-sm font-semibold text-white shadow-glow-purple"
+            >
+              Launch App
+            </Link>
+          </motion.div>
+          <AuthActions />
+        </div>
       </nav>
     </header>
   );

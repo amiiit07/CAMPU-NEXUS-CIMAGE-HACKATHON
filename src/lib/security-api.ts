@@ -12,6 +12,12 @@ type AuthPayload = {
   exp: number;
 };
 
+type PasswordResetToken = {
+  rawToken: string;
+  tokenHash: string;
+  expiresAt: Date;
+};
+
 type RateBucket = {
   count: number;
   resetAt: number;
@@ -142,6 +148,17 @@ export function authContextFromRequest(request: Request | NextRequest) {
     return null;
   }
   return verifyToken(token);
+}
+
+export function createPasswordResetToken(ttlMinutes = 30): PasswordResetToken {
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  const tokenHash = crypto.createHmac("sha256", getSecret()).update(rawToken).digest("hex");
+  const expiresAt = new Date(Date.now() + ttlMinutes * 60_000);
+  return { rawToken, tokenHash, expiresAt };
+}
+
+export function hashPasswordResetToken(rawToken: string) {
+  return crypto.createHmac("sha256", getSecret()).update(rawToken).digest("hex");
 }
 
 export function tenantFromRequest(request: Request | NextRequest) {

@@ -8,7 +8,9 @@ const tenantSchema = new Schema(
     brandColor: String,
     subdomain: String,
     isolationMode: { type: String, enum: ["shared", "isolated", "schema"], default: "shared" },
-    status: { type: String, enum: ["active", "paused", "trial"], default: "active" }
+    status: { type: String, enum: ["active", "paused", "trial", "suspended"], default: "active" },
+    subscriptionPlan: { type: String, enum: ["free", "pro", "enterprise"], default: "free" },
+    contactEmail: String
   },
   { timestamps: true }
 );
@@ -18,11 +20,17 @@ const userSchema = new Schema(
     tenantId: { type: Schema.Types.ObjectId, ref: "Tenant", index: true, required: true },
     email: { type: String, required: true, index: true },
     name: { type: String, required: true },
+    avatarUrl: String,
     passwordHash: { type: String, select: false },
     role: { type: String, enum: ["super_admin", "college_admin", "faculty", "student", "startup"], default: "student" },
+    departmentId: { type: Schema.Types.ObjectId, ref: "Department", index: true },
+    isVerified: { type: Boolean, default: false },
     authProvider: String,
     status: { type: String, enum: ["active", "suspended", "pending"], default: "active" },
-    lastLoginAt: Date
+    lastLoginAt: Date,
+    failedLoginCount: { type: Number, default: 0 },
+    resetTokenHash: { type: String, select: false },
+    resetTokenExpiresAt: { type: Date, select: false }
   },
   { timestamps: true }
 );
@@ -33,12 +41,14 @@ const profileSchema = new Schema(
   {
     tenantId: { type: Schema.Types.ObjectId, ref: "Tenant", index: true, required: true },
     userId: { type: Schema.Types.ObjectId, ref: "User", index: true, required: true },
+    photoUrl: String,
     headline: String,
     bio: String,
     skills: [String],
     certificates: [String],
     achievements: [String],
     portfolioLinks: [String],
+    socialLinks: [String],
     githubHandle: String,
     resumeUrl: String,
     badges: [String],
@@ -58,6 +68,22 @@ const skillSchema = new Schema(
   },
   { timestamps: true }
 );
+
+skillSchema.index({ tenantId: 1, name: 1 }, { unique: true });
+
+const departmentSchema = new Schema(
+  {
+    tenantId: { type: Schema.Types.ObjectId, ref: "Tenant", index: true, required: true },
+    name: { type: String, required: true },
+    code: { type: String, required: true },
+    headUserId: { type: Schema.Types.ObjectId, ref: "User" },
+    description: String,
+    status: { type: String, enum: ["active", "archived"], default: "active" }
+  },
+  { timestamps: true }
+);
+
+departmentSchema.index({ tenantId: 1, code: 1 }, { unique: true });
 
 const projectSchema = new Schema(
   {
@@ -82,6 +108,7 @@ const teamSchema = new Schema(
     tenantId: { type: Schema.Types.ObjectId, ref: "Tenant", index: true, required: true },
     projectId: { type: Schema.Types.ObjectId, ref: "Project", index: true, required: true },
     name: String,
+    ownerId: { type: Schema.Types.ObjectId, ref: "User" },
     members: [{ type: Schema.Types.ObjectId, ref: "User" }],
     chemistryScore: { type: Number, default: 75 }
   },
@@ -104,8 +131,10 @@ const taskSchema = new Schema(
   {
     tenantId: { type: Schema.Types.ObjectId, ref: "Tenant", index: true, required: true },
     projectId: { type: Schema.Types.ObjectId, ref: "Project" },
+    creatorId: { type: Schema.Types.ObjectId, ref: "User" },
     assigneeId: { type: Schema.Types.ObjectId, ref: "User" },
     title: String,
+    description: String,
     status: { type: String, enum: ["todo", "doing", "blocked", "done"], default: "todo" },
     dueDate: Date
   },
@@ -117,6 +146,7 @@ const roomSchema = new Schema(
     tenantId: { type: Schema.Types.ObjectId, ref: "Tenant", index: true, required: true },
     title: String,
     type: { type: String, enum: ["dm", "group", "voice", "project"], default: "project" },
+    projectId: { type: Schema.Types.ObjectId, ref: "Project" },
     participantIds: [{ type: Schema.Types.ObjectId, ref: "User" }]
   },
   { timestamps: true }
@@ -128,7 +158,8 @@ const messageSchema = new Schema(
     roomId: { type: Schema.Types.ObjectId, ref: "Room", index: true, required: true },
     senderId: { type: Schema.Types.ObjectId, ref: "User", index: true, required: true },
     text: String,
-    attachments: [String]
+    attachments: [String],
+    editedAt: Date
   },
   { timestamps: true }
 );
@@ -145,6 +176,8 @@ const ratingSchema = new Schema(
   },
   { timestamps: true }
 );
+
+ratingSchema.index({ tenantId: 1, raterId: 1, subjectId: 1, category: 1 }, { unique: true });
 
 const reviewSchema = new Schema(
   {
@@ -191,7 +224,23 @@ const reportSchema = new Schema(
     targetType: String,
     targetId: String,
     reason: String,
+    reviewedById: { type: Schema.Types.ObjectId, ref: "User" },
     status: { type: String, enum: ["open", "reviewing", "resolved"], default: "open" }
+  },
+  { timestamps: true }
+);
+
+const eventSchema = new Schema(
+  {
+    tenantId: { type: Schema.Types.ObjectId, ref: "Tenant", index: true, required: true },
+    title: { type: String, required: true },
+    description: String,
+    eventType: { type: String, enum: ["hackathon", "announcement", "workshop", "internal"], default: "internal" },
+    startAt: Date,
+    endAt: Date,
+    location: String,
+    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+    status: { type: String, enum: ["draft", "published", "archived"], default: "draft" }
   },
   { timestamps: true }
 );
@@ -219,6 +268,7 @@ export const Tenant = getModel("Tenant", tenantSchema);
 export const User = getModel("User", userSchema);
 export const Profile = getModel("Profile", profileSchema);
 export const Skill = getModel("Skill", skillSchema);
+export const Department = getModel("Department", departmentSchema);
 export const Project = getModel("Project", projectSchema);
 export const Team = getModel("Team", teamSchema);
 export const Application = getModel("Application", applicationSchema);
@@ -230,4 +280,5 @@ export const Review = getModel("Review", reviewSchema);
 export const Notification = getModel("Notification", notificationSchema);
 export const AuditLog = getModel("AuditLog", auditLogSchema);
 export const Report = getModel("Report", reportSchema);
+export const Event = getModel("Event", eventSchema);
 export const Recommendation = getModel("Recommendation", recommendationSchema);

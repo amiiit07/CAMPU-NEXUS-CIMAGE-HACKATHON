@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { Brain, Building2, LineChart, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { Card, SectionTitle, StatCard } from "@/components/ui";
+import { getServerAuthContext } from "@/lib/server-auth";
 
 const stats = [
   { label: "Active tenants", value: "38" },
@@ -17,7 +19,43 @@ const modules = [
   { title: "Hackathon mode", description: "Live team formation, demo-day workflows, and auto certificate issuance.", icon: Sparkles }
 ];
 
-export default function DashboardPage() {
+const roleWorkflow: Record<string, { title: string; bullets: string[]; ctaHref: string; cta: string }> = {
+  student: {
+    title: "Student workflow",
+    bullets: ["Build profile and skills", "Apply to projects", "Track tasks, chat, and ratings"],
+    ctaHref: "/dashboard/student",
+    cta: "Open Student Hub"
+  },
+  faculty: {
+    title: "Faculty workflow",
+    bullets: ["Approve and mentor projects", "Review submissions", "Publish opportunities"],
+    ctaHref: "/dashboard/faculty",
+    cta: "Open Faculty Desk"
+  },
+  college_admin: {
+    title: "College admin workflow",
+    bullets: ["Manage users and departments", "Moderate reports", "Monitor analytics and events"],
+    ctaHref: "/dashboard/admin",
+    cta: "Open Admin Console"
+  },
+  super_admin: {
+    title: "Super admin workflow",
+    bullets: ["Manage all tenants", "Control subscriptions and broadcasts", "Audit global security"],
+    ctaHref: "/dashboard/super-admin",
+    cta: "Open Global Control"
+  },
+  startup: {
+    title: "Startup workflow",
+    bullets: ["Post opportunities", "Review applications", "Build cross-college teams"],
+    ctaHref: "/dashboard/projects",
+    cta: "Open Project Board"
+  }
+};
+
+export default async function DashboardPage() {
+  const auth = await getServerAuthContext();
+  const workflow = roleWorkflow[auth?.role ?? "student"];
+
   return (
     <div className="space-y-8">
       <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
@@ -25,7 +63,7 @@ export default function DashboardPage() {
           <SectionTitle
             eyebrow="Platform overview"
             title="Campus Nexus control center"
-            description="A premium demo shell for the federated SaaS vision. Each section is structured to match a production multi-tenant product even before backend integrations are switched on."
+            description="Enterprise-ready role-aware shell with tenant isolation, centralized RBAC policy, generic CRUD APIs, and modular workflows for every actor."
           />
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -33,6 +71,32 @@ export default function DashboardPage() {
             <StatCard key={stat.label} label={stat.label} value={stat.value} />
           ))}
         </div>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+        <Card>
+          <div className="text-xs uppercase tracking-[0.25em] text-cyan-200">Active role</div>
+          <h3 className="mt-2 text-2xl font-semibold text-white">{auth?.role ?? "guest"}</h3>
+          <p className="mt-3 text-sm text-slate-300">{workflow.title}</p>
+          <div className="mt-4 space-y-2 text-sm text-slate-200">
+            {workflow.bullets.map((item) => (
+              <div key={item}>• {item}</div>
+            ))}
+          </div>
+          <Link href={workflow.ctaHref} className="mt-5 inline-flex rounded-full bg-cyan-400 px-5 py-2 text-sm font-semibold text-slate-900">
+            {workflow.cta}
+          </Link>
+        </Card>
+        <Card>
+          <div className="text-xs uppercase tracking-[0.25em] text-cyan-200">Unified operations</div>
+          <h3 className="mt-2 text-lg font-semibold text-white">RBAC CRUD studio</h3>
+          <p className="mt-3 text-sm text-slate-300">
+            Every core entity now supports create, read, update, and delete through a role-scoped API with tenant safety.
+          </p>
+          <Link href="/dashboard/workspace" className="mt-5 inline-flex rounded-full border border-white/20 px-5 py-2 text-sm text-white">
+            Open CRUD Studio
+          </Link>
+        </Card>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
