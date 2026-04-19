@@ -31,10 +31,10 @@ const tenant = { create: "tenant", read: "tenant", update: "tenant", delete: "te
 const none = { create: "none", read: "none", update: "none", delete: "none" } as const;
 
 const STUDENT: Record<Resource, Record<CrudAction, Scope>> = {
-  users: { create: "none", read: "tenant", update: "own", delete: "none" },
-  profiles: { create: "own", read: "tenant", update: "own", delete: "none" },
+  users: { create: "none", read: "own", update: "none", delete: "none" },
+  profiles: { create: "own", read: "own", update: "own", delete: "none" },
   skills: { create: "none", read: "tenant", update: "none", delete: "none" },
-  projects: { create: "tenant", read: "tenant", update: "own", delete: "own" },
+  projects: { create: "own", read: "tenant", update: "own", delete: "own" },
   applications: own,
   teams: { create: "own", read: "tenant", update: "own", delete: "own" },
   tasks: { create: "own", read: "tenant", update: "own", delete: "own" },
@@ -99,7 +99,7 @@ const SUPER_ADMIN: Record<Resource, Record<CrudAction, Scope>> = {
 
 const STARTUP: Record<Resource, Record<CrudAction, Scope>> = {
   ...STUDENT,
-  projects: tenant,
+  projects: { create: "own", read: "tenant", update: "own", delete: "own" },
   applications: tenant
 };
 

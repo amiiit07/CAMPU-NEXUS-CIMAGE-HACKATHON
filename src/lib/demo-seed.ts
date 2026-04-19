@@ -160,6 +160,7 @@ export async function seedDemoData() {
       tenantId: tenant._id,
       title: `${tenant.name} General Room`,
       type: "group",
+      creatorId: tenantUsers[0]?._id,
       participantIds: tenantUsers.map((user) => user._id)
     });
     generalRooms.push({ roomId: generalRoom._id.toString(), tenantSlug: tenant.slug });
@@ -194,6 +195,7 @@ export async function seedDemoData() {
       title: `${project.title} Room`,
       type: "project",
       projectId: project._id,
+      creatorId: project.ownerId,
       participantIds: tenantUsers.map((user) => user._id)
     });
 

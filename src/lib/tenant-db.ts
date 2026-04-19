@@ -1,4 +1,10 @@
 import { Tenant } from "@/lib/models";
+import {
+  DEFAULT_TENANT_BRAND_COLOR,
+  DEFAULT_TENANT_CONTACT_EMAIL,
+  DEFAULT_TENANT_NAME,
+  DEFAULT_TENANT_SLUG
+} from "@/lib/tenant-config";
 
 export async function resolveTenantRecord(tenantKey: string) {
   const tenant =
@@ -11,13 +17,14 @@ export async function resolveTenantRecord(tenantKey: string) {
   }
 
   return Tenant.findOneAndUpdate(
-    { slug: "campus-demo" },
+    { slug: DEFAULT_TENANT_SLUG },
     {
-      slug: "campus-demo",
-      name: "Campus Demo Tenant",
-      subdomain: "demo",
-      brandColor: "#7C3AED",
-      isolationMode: "shared"
+      slug: DEFAULT_TENANT_SLUG,
+      name: DEFAULT_TENANT_NAME,
+      subdomain: DEFAULT_TENANT_SLUG,
+      brandColor: DEFAULT_TENANT_BRAND_COLOR,
+      isolationMode: "shared",
+      contactEmail: DEFAULT_TENANT_CONTACT_EMAIL
     },
     { upsert: true, new: true }
   );

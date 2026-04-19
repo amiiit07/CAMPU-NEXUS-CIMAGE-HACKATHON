@@ -18,9 +18,9 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, roles: ["student", "faculty", "college_admin", "super_admin", "startup"] },
-  { href: "/dashboard/student", label: "Student Hub", icon: Users, roles: ["student", "faculty", "college_admin", "super_admin", "startup"] },
-  { href: "/dashboard/faculty", label: "Faculty", icon: Sparkles, roles: ["faculty", "college_admin", "super_admin"] },
-  { href: "/dashboard/admin", label: "College Admin", icon: ShieldCheck, roles: ["college_admin", "super_admin"] },
+  { href: "/dashboard/student", label: "Student Hub", icon: Users, roles: ["student", "startup"] },
+  { href: "/dashboard/faculty", label: "Faculty", icon: Sparkles, roles: ["faculty"] },
+  { href: "/dashboard/admin", label: "College Admin", icon: ShieldCheck, roles: ["college_admin"] },
   { href: "/dashboard/super-admin", label: "Super Admin", icon: ShieldCheck, roles: ["super_admin"] },
   { href: "/dashboard/projects", label: "Projects", icon: Rocket, roles: ["student", "faculty", "college_admin", "super_admin", "startup"] },
   { href: "/dashboard/notifications", label: "Alerts", icon: Bell, roles: ["student", "faculty", "college_admin", "super_admin", "startup"] },
@@ -65,19 +65,19 @@ export default function RoleNav({ onNavigate }: { onNavigate?: () => void }) {
       {visibleItems.map((item) => (
         <motion.div key={item.href} whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300, damping: 24 }}>
           <Link
-          key={item.href}
-          href={item.href}
-          onClick={onNavigate}
-          className={cn(
-            "group relative flex items-center gap-3 overflow-hidden rounded-2xl px-4 py-3 text-sm transition",
-            pathname === item.href
-              ? "border border-cyan-300/35 bg-gradient-to-r from-cyan-400/20 to-brand-purple/20 text-white shadow-glow-cyan"
-              : "border border-transparent text-slate-300 hover:border-white/10 hover:bg-white/8 hover:text-white"
-          )}
-        >
-          <item.icon className={cn("h-4 w-4", pathname === item.href ? "text-cyan-100" : "text-cyan-300")} />
-          {item.label}
-          {pathname === item.href ? <span className="absolute inset-y-2 left-1 w-1 rounded-full bg-cyan-300" /> : null}
+            key={item.href}
+            href={item.href}
+            onClick={onNavigate}
+            className={cn(
+              "group relative flex items-center gap-3 overflow-hidden rounded-2xl px-4 py-3 text-sm transition",
+              pathname === item.href
+                ? "border border-cyan-300/35 bg-gradient-to-r from-cyan-400/20 to-brand-purple/20 text-white shadow-glow-cyan"
+                : "border border-transparent text-slate-300 hover:border-white/10 hover:bg-white/8 hover:text-white"
+            )}
+          >
+            <item.icon className={cn("h-4 w-4", pathname === item.href ? "text-cyan-100" : "text-cyan-300")} />
+            {item.label}
+            {pathname === item.href ? <span className="absolute inset-y-2 left-1 w-1 rounded-full bg-cyan-300" /> : null}
           </Link>
         </motion.div>
       ))}

@@ -1,6 +1,7 @@
 import { Badge, Button, Card, SectionTitle } from "@/components/ui";
 import { GradientBarChart } from "@/components/dashboard-charts";
 import { StudentRecommendationsPanel } from "@/components/student-recommendations-panel";
+import { requireDashboardRole } from "@/lib/dashboard-guards";
 
 const opportunities = [
   "AI Mentor Mesh",
@@ -9,7 +10,8 @@ const opportunities = [
   "Open Source Collaboration Room"
 ];
 
-export default function StudentDashboardPage() {
+export default async function StudentDashboardPage() {
+  const auth = await requireDashboardRole(["student", "startup"]);
   const progress = [
     { label: "Backend", value: 84 },
     { label: "Realtime", value: 76 },
@@ -34,7 +36,7 @@ export default function StudentDashboardPage() {
                 Students get recommendation-led discovery plus self-service actions for profile updates, project applications, and task follow-up.
               </p>
             </div>
-            <Badge>Role: Student</Badge>
+            <Badge>Role: {auth.role === "startup" ? "Startup" : "Student"}</Badge>
           </div>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button href="/dashboard/projects">Browse Projects</Button>

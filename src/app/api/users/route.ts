@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/db";
 import { User } from "@/lib/models";
 import { requireApiAuth } from "@/lib/api-auth";
 import { paginationFromSearch } from "@/lib/pagination";
+import mongoose from "mongoose";
 
 export async function GET(request: Request) {
   try {
@@ -14,15 +15,28 @@ export async function GET(request: Request) {
     await connectToDatabase();
     const url = new URL(request.url);
     const { skip, limit, page } = paginationFromSearch(url);
+    const tenantId = url.searchParams.get("tenantId");
+    const q = url.searchParams.get("q")?.trim();
+    const isSuperAdmin = authResult.auth.role === "super_admin";
+
+    const filter: Record<string, unknown> = isSuperAdmin
+      ? tenantId && mongoose.Types.ObjectId.isValid(tenantId)
+        ? { tenantId }
+        : {}
+      : { tenantId: authResult.auth.tenantId };
+
+    if (q) {
+      filter.$or = [{ name: new RegExp(q, "i") }, { email: new RegExp(q, "i") }];
+    }
 
     const [rows, total] = await Promise.all([
-      User.find({ tenantId: authResult.auth.tenantId })
-        .select("email name role status lastLoginAt createdAt")
+      User.find(filter)
+        .select("email name role status tenantId lastLoginAt createdAt")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
-      User.countDocuments({ tenantId: authResult.auth.tenantId })
+      User.countDocuments(filter)
     ]);
 
     return ok({ items: rows, page, limit, total });

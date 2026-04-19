@@ -1,7 +1,8 @@
 import { connectToDatabase } from "@/lib/db";
 import { fail, ok, safeJson } from "@/lib/http";
 import { User } from "@/lib/models";
-import { createPasswordResetToken, limitByIp } from "@/lib/security-api";
+import { createPasswordResetToken, limitByIp, tenantFromRequest } from "@/lib/security-api";
+import { resolveTenantRecord } from "@/lib/tenant-db";
 import { forgotPasswordSchema } from "@/lib/validators";
 
 export async function POST(request: Request) {
@@ -18,7 +19,8 @@ export async function POST(request: Request) {
     }
 
     await connectToDatabase();
-    const user = await User.findOne({ email: parsed.data.email.toLowerCase() }).select("_id email status");
+    const tenant = await resolveTenantRecord(tenantFromRequest(request));
+    const user = await User.findOne({ tenantId: tenant._id, email: parsed.data.email.toLowerCase() }).select("_id email status");
 
     if (!user || user.status !== "active") {
       return ok({ message: "If this email exists, a reset link has been generated." });

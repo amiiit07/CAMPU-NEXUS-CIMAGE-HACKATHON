@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { DEFAULT_TENANT_SLUG, tenantSlugFromHost } from "@/lib/tenant-config";
 
 export type TenantContext = {
   tenantId: string;
@@ -10,8 +11,8 @@ export type TenantContext = {
 export function resolveTenantFromHeaders(): TenantContext {
   const headersList = headers();
   const host = headersList.get("x-forwarded-host") ?? headersList.get("host") ?? "campus-nexus.local";
-  const tenantId = headersList.get("x-tenant-id") ?? "campus-demo";
-  const tenantSlug = headersList.get("x-tenant-slug") ?? host.split(".")[0] ?? "campus-demo";
+  const tenantSlug = headersList.get("x-tenant-slug") ?? tenantSlugFromHost(host);
+  const tenantId = headersList.get("x-tenant-id") ?? tenantSlug ?? DEFAULT_TENANT_SLUG;
 
   return {
     tenantId,

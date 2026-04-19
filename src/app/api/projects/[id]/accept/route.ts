@@ -23,13 +23,26 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 
     await connectToDatabase();
-    const project = await Project.findOne({ _id: id, tenantId: authResult.auth.tenantId, ownerId: authResult.auth.userId }).lean();
+    const project =
+      authResult.auth.role === "super_admin"
+        ? await Project.findById(id).lean()
+        : await Project.findOne({ _id: id, tenantId: authResult.auth.tenantId }).lean();
+
     if (!project) {
-      return fail("Project not found or not owned by user", 404);
+      return fail("Project not found", 404);
+    }
+
+    const canManage =
+      authResult.auth.role === "super_admin" ||
+      (project.tenantId.toString() === authResult.auth.tenantId &&
+        (project.ownerId?.toString() === authResult.auth.userId || ["college_admin", "faculty"].includes(authResult.auth.role)));
+
+    if (!canManage) {
+      return fail("Forbidden", 403);
     }
 
     const application = await Application.findOneAndUpdate(
-      { tenantId: authResult.auth.tenantId, projectId: id, userId: applicantId },
+      { tenantId: project.tenantId, projectId: id, userId: applicantId },
       { $set: { status: "accepted" } },
       { new: true }
     ).lean();
@@ -39,7 +52,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 
     await Notification.create({
-      tenantId: authResult.auth.tenantId,
+      tenantId: project.tenantId,
       userId: applicantId,
       title: "Application accepted",
       body: `You were accepted for project ${project.title}`

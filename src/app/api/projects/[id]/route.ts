@@ -10,6 +10,30 @@ function validId(id: string) {
   return mongoose.Types.ObjectId.isValid(id);
 }
 
+async function findProjectByRole(id: string, auth: { tenantId: string; role: string }) {
+  if (auth.role === "super_admin") {
+    return Project.findById(id);
+  }
+
+  return Project.findOne({ _id: id, tenantId: auth.tenantId });
+}
+
+function canManageProject(project: { tenantId: { toString(): string }; ownerId?: { toString(): string } | null }, auth: { userId: string; tenantId: string; role: string }) {
+  if (auth.role === "super_admin") {
+    return true;
+  }
+
+  if (project.tenantId.toString() !== auth.tenantId) {
+    return false;
+  }
+
+  if (["college_admin", "faculty"].includes(auth.role)) {
+    return true;
+  }
+
+  return project.ownerId?.toString() === auth.userId;
+}
+
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
@@ -23,7 +47,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     }
 
     await connectToDatabase();
-    const project = await Project.findOne({ _id: id, tenantId: authResult.auth.tenantId }).lean();
+    const project = await findProjectByRole(id, authResult.auth).lean();
     if (!project) {
       return fail("Project not found", 404);
     }
@@ -53,27 +77,25 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 
     await connectToDatabase();
-
-    const update = {
-      ...parsed.data,
-      title: parsed.data.title ? sanitizeText(parsed.data.title) : undefined,
-      summary: parsed.data.summary ? sanitizeText(parsed.data.summary) : undefined,
-      timeline: parsed.data.timeline ? sanitizeText(parsed.data.timeline) : undefined
-    };
-
-    const project = await Project.findOneAndUpdate(
-      {
-        _id: id,
-        tenantId: authResult.auth.tenantId,
-        $or: [{ ownerId: authResult.auth.userId }, { tenantId: authResult.auth.tenantId }]
-      },
-      { $set: update },
-      { new: true }
-    ).lean();
-
-    if (!project) {
+    const existingProject = await findProjectByRole(id, authResult.auth).lean();
+    if (!existingProject) {
       return fail("Project not found", 404);
     }
+    if (!canManageProject(existingProject, authResult.auth)) {
+      return fail("Forbidden", 403);
+    }
+
+    const update = Object.fromEntries(
+      Object.entries({
+        ...parsed.data,
+        title: parsed.data.title ? sanitizeText(parsed.data.title) : undefined,
+        summary: parsed.data.summary ? sanitizeText(parsed.data.summary) : undefined,
+        timeline: parsed.data.timeline ? sanitizeText(parsed.data.timeline) : undefined,
+        requiredSkills: parsed.data.requiredSkills?.map((skill) => sanitizeText(skill)).filter(Boolean)
+      }).filter(([, value]) => value !== undefined)
+    );
+
+    const project = await Project.findByIdAndUpdate(existingProject._id, { $set: update }, { new: true }).lean();
 
     return ok({ project });
   } catch (error) {
@@ -94,10 +116,14 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     }
 
     await connectToDatabase();
-    const deleted = await Project.findOneAndDelete({ _id: id, tenantId: authResult.auth.tenantId, ownerId: authResult.auth.userId }).lean();
-    if (!deleted) {
-      return fail("Project not found or not owned by user", 404);
+    const existingProject = await findProjectByRole(id, authResult.auth).lean();
+    if (!existingProject) {
+      return fail("Project not found", 404);
     }
+    if (!canManageProject(existingProject, authResult.auth)) {
+      return fail("Forbidden", 403);
+    }
+    await Project.deleteOne({ _id: existingProject._id });
 
     return ok({ deleted: true, id });
   } catch (error) {

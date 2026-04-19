@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import { fail, ok, safeJson } from "@/lib/http";
 import { requireApiAuth } from "@/lib/api-auth";
-import { CRUD_CONFIG, sanitizePayload } from "@/lib/crud-config";
+import { CRUD_CONFIG, writablePayload } from "@/lib/crud-config";
 import { scopeFor, type Resource, type Scope } from "@/lib/rbac";
 
 function isResource(value: string): value is Resource {
@@ -101,10 +101,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ reso
     }
 
     const filter = { ...baseFilter, _id: id };
-    const payload = sanitizePayload(resourceRaw, body as Record<string, unknown>);
+    const payload = writablePayload(resourceRaw, body as Record<string, unknown>, scope, "update");
 
     if (scope !== "global") {
       delete payload.tenantId;
+    }
+
+    if (resourceRaw === "rooms" && Array.isArray(payload.participantIds)) {
+      payload.participantIds = Array.from(new Set([authResult.auth.userId, ...payload.participantIds]));
     }
 
     const item = await CRUD_CONFIG[resourceRaw].model.findOneAndUpdate(filter, { $set: payload }, { new: true }).lean();

@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { cookies, headers } from "next/headers";
 import type { NextRequest } from "next/server";
 import { fail } from "@/lib/http";
+import { DEFAULT_TENANT_SLUG, tenantSlugFromHost } from "@/lib/tenant-config";
 
 type AuthPayload = {
   sub: string;
@@ -168,10 +169,10 @@ export function tenantFromRequest(request: Request | NextRequest) {
     return headerTenant;
   }
   const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host") ?? "campus-nexus.local";
-  return host.split(".")[0] ?? "campus-demo";
+  return tenantSlugFromHost(host);
 }
 
 export function tenantFromServerHeaders() {
   const h = headers();
-  return h.get("x-tenant-id") ?? "campus-demo";
+  return h.get("x-tenant-id") ?? h.get("x-tenant-slug") ?? DEFAULT_TENANT_SLUG;
 }

@@ -10,7 +10,8 @@ const tenantCreateSchema = z.object({
   name: z.string().min(2).max(120),
   brandColor: z.string().optional(),
   subdomain: z.string().optional(),
-  isolationMode: z.enum(["shared", "isolated", "schema"]).optional()
+  isolationMode: z.enum(["shared", "isolated", "schema"]).optional(),
+  contactEmail: z.string().email().optional()
 });
 
 export async function GET(request: Request) {
@@ -42,12 +43,25 @@ export async function POST(request: Request) {
     }
 
     await connectToDatabase();
+    const slug = parsed.data.slug.trim().toLowerCase();
+    const subdomain = (parsed.data.subdomain ?? slug).trim().toLowerCase();
+    const duplicate = await Tenant.findOne({
+      $or: [{ slug }, { subdomain }]
+    })
+      .select("_id")
+      .lean();
+
+    if (duplicate) {
+      return fail("Tenant slug or subdomain already exists", 409);
+    }
+
     const tenant = await Tenant.create({
-      slug: parsed.data.slug,
+      slug,
       name: parsed.data.name,
       brandColor: parsed.data.brandColor ?? "#7C3AED",
-      subdomain: parsed.data.subdomain ?? parsed.data.slug,
-      isolationMode: parsed.data.isolationMode ?? "shared"
+      subdomain,
+      isolationMode: parsed.data.isolationMode ?? "shared",
+      contactEmail: parsed.data.contactEmail
     });
 
     return NextResponse.json({ ok: true, data: { tenant } }, { status: 201 });

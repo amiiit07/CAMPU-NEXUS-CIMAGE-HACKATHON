@@ -43,6 +43,7 @@ export function ProjectsBoard({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const canModerateProjects = ["college_admin", "faculty", "super_admin"].includes(role);
 
   async function refreshPage(message?: string) {
     startTransition(() => {
@@ -223,16 +224,16 @@ export function ProjectsBoard({
               )}
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
-              {!project.owned ? (
+              {!project.owned && ["student", "startup"].includes(role) ? (
                 <Button onClick={() => void applyToProject(project._id)} disabled={project.applied}>
                   <BriefcaseBusiness className="h-4 w-4" />
                   {project.applied ? "Applied" : "Apply Now"}
                 </Button>
               ) : null}
-              {project.owned ? (
+              {project.owned || canModerateProjects ? (
                 <>
-                  <Button href={`/dashboard/workspace?resource=projects`} variant="secondary">
-                    Manage Project
+                  <Button href={`/dashboard/workspace?resource=projects&mode=edit&id=${project._id}`} variant="secondary">
+                    Edit Project
                   </Button>
                   <Button
                     onClick={() => void deleteProject(project._id)}

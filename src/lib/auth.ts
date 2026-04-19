@@ -1,11 +1,12 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import type { NextAuthOptions } from "next-auth";
 import { z } from "zod";
+import { DEFAULT_TENANT_SLUG } from "@/lib/tenant-config";
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
   pages: {
-    signIn: "/"
+    signIn: "/login"
   },
   providers: [
     CredentialsProvider({
@@ -33,7 +34,7 @@ export const authOptions: NextAuthOptions = {
           email: parsed.data.email,
           name: parsed.data.email.split("@")[0],
           role: parsed.data.role ?? "student",
-          tenantId: "campus-demo"
+          tenantId: DEFAULT_TENANT_SLUG
         };
       }
     })
@@ -42,7 +43,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.role = (user as { role?: string }).role ?? "student";
-        token.tenantId = (user as { tenantId?: string }).tenantId ?? "campus-demo";
+        token.tenantId = (user as { tenantId?: string }).tenantId ?? DEFAULT_TENANT_SLUG;
       }
       return token;
     },

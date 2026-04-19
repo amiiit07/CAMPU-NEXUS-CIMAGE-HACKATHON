@@ -3,14 +3,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-const tenantOptions = [
-  { value: "cimage", label: "CIMAGE" },
-  { value: "bia-patna", label: "BIA PATNA" },
-  { value: "aia-patna", label: "AIA PATNA" },
-  { value: "iit-patna", label: "IIT PATNA" },
-  { value: "ibm", label: "IBM" }
-];
+import { TENANT_OPTIONS } from "@/lib/tenant-config";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -62,7 +55,7 @@ export default function LoginPage() {
               onChange={(event) => setTenantId(event.target.value)}
               className="w-full rounded-xl border border-white/15 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300"
             >
-              {tenantOptions.map((tenant) => (
+              {TENANT_OPTIONS.map((tenant) => (
                 <option key={tenant.value} value={tenant.value}>
                   {tenant.label}
                 </option>
@@ -102,6 +95,15 @@ export default function LoginPage() {
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
+
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-300">
+          <Link href="/register" className="text-cyan-300 hover:text-cyan-200">
+            Create account
+          </Link>
+          <Link href="/forgot-password" className="text-cyan-300 hover:text-cyan-200">
+            Forgot password
+          </Link>
+        </div>
 
         <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-slate-300">
           Super admin default: <span className="font-semibold text-white">superadmin@campusnexus.dev</span> on <span className="font-semibold text-white">CIMAGE</span>

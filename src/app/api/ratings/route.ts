@@ -23,15 +23,26 @@ export async function POST(request: Request) {
     }
 
     await connectToDatabase();
-    const rating = await Rating.create({
+    const filter = {
       tenantId: authResult.auth.tenantId,
       raterId: authResult.auth.userId,
       subjectId: parsed.data.subjectId,
-      score: parsed.data.score,
       category: parsed.data.category
-    });
+    };
 
-    return ok({ rating }, 201);
+    const existing = await Rating.findOne(filter).lean();
+    const rating = await Rating.findOneAndUpdate(
+      filter,
+      {
+        $set: {
+          score: parsed.data.score
+        },
+        $setOnInsert: filter
+      },
+      { upsert: true, new: true }
+    ).lean();
+
+    return ok({ rating, created: !existing }, existing ? 200 : 201);
   } catch (error) {
     return fail("Failed to submit rating", 500, error instanceof Error ? error.message : "unknown");
   }

@@ -26,6 +26,9 @@ export async function requireApiAuth(request: Request | NextRequest, allowedRole
   if (!user) {
     return { error: "User not found" as const };
   }
+  if (user.status !== "active") {
+    return { error: "Account inactive" as const };
+  }
 
   return {
     auth: {

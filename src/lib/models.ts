@@ -102,6 +102,7 @@ const projectSchema = new Schema(
 );
 
 projectSchema.index({ tenantId: 1, stage: 1, createdAt: -1 });
+projectSchema.index({ tenantId: 1, ownerId: 1, createdAt: -1 });
 
 const teamSchema = new Schema(
   {
@@ -147,10 +148,14 @@ const roomSchema = new Schema(
     title: String,
     type: { type: String, enum: ["dm", "group", "voice", "project"], default: "project" },
     projectId: { type: Schema.Types.ObjectId, ref: "Project" },
+    creatorId: { type: Schema.Types.ObjectId, ref: "User", index: true },
     participantIds: [{ type: Schema.Types.ObjectId, ref: "User" }]
   },
   { timestamps: true }
 );
+
+roomSchema.index({ tenantId: 1, participantIds: 1, updatedAt: -1 });
+roomSchema.index({ tenantId: 1, creatorId: 1, createdAt: -1 });
 
 const messageSchema = new Schema(
   {

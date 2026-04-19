@@ -5,7 +5,7 @@ import { requireDashboardRole } from "@/lib/dashboard-guards";
 import { Project, Rating, Task, Team } from "@/lib/models";
 
 export default async function FacultyDashboardPage() {
-  const auth = await requireDashboardRole(["faculty", "college_admin", "super_admin"]);
+  const auth = await requireDashboardRole(["faculty"]);
   await connectToDatabase();
 
   const [teams, tasks, researchProjects, ratings] = await Promise.all([

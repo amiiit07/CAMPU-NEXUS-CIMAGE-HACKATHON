@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
-import { Project, Room } from "@/lib/models";
+import { Project, Room, User } from "@/lib/models";
 import { requireApiAuth } from "@/lib/api-auth";
 import { fail, ok, safeJson } from "@/lib/http";
 import { sanitizeText } from "@/lib/security-api";
@@ -93,17 +93,24 @@ export async function POST(request: Request) {
       }
     }
 
-    const participantIds = Array.from(
-      new Set(
-        [authResult.auth.userId, ...(parsed.data.participantIds ?? [])].filter((id) => mongoose.Types.ObjectId.isValid(id))
-      )
+    const requestedParticipantIds = Array.from(
+      new Set([authResult.auth.userId, ...(parsed.data.participantIds ?? [])].filter((id) => mongoose.Types.ObjectId.isValid(id)))
     );
+    const validParticipants = await User.find({
+      _id: { $in: requestedParticipantIds },
+      tenantId: authResult.auth.tenantId,
+      status: "active"
+    })
+      .select("_id")
+      .lean();
+    const participantIds = validParticipants.map((user) => user._id);
 
     const room = await Room.create({
       tenantId: authResult.auth.tenantId,
       title: sanitizeText(parsed.data.title),
       type: parsed.data.type ?? (projectId ? "project" : "group"),
       projectId: projectId ?? undefined,
+      creatorId: authResult.auth.userId,
       participantIds
     });
 

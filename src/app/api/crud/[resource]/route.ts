@@ -3,7 +3,7 @@ import { connectToDatabase } from "@/lib/db";
 import { fail, ok, safeJson } from "@/lib/http";
 import { paginationFromSearch } from "@/lib/pagination";
 import { requireApiAuth } from "@/lib/api-auth";
-import { buildSearchFilter, CRUD_CONFIG, sanitizePayload } from "@/lib/crud-config";
+import { buildSearchFilter, CRUD_CONFIG, writablePayload } from "@/lib/crud-config";
 import { scopeFor, type Resource, type Scope } from "@/lib/rbac";
 
 function isResource(value: string): value is Resource {
@@ -110,7 +110,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
 
     await connectToDatabase();
 
-    const payload = sanitizePayload(resourceRaw, body as Record<string, unknown>);
+    const payload = writablePayload(resourceRaw, body as Record<string, unknown>, scope, "create");
     const cfg = CRUD_CONFIG[resourceRaw];
 
     if (resourceRaw === "tenants") {
@@ -128,6 +128,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
 
     if (scope === "own" && cfg.ownerField && !payload[cfg.ownerField]) {
       payload[cfg.ownerField] = authResult.auth.userId;
+    }
+
+    if (resourceRaw === "rooms") {
+      const participantIds = Array.isArray(payload.participantIds) ? payload.participantIds : [];
+      payload.participantIds = Array.from(new Set([authResult.auth.userId, ...participantIds]));
     }
 
     const item = await cfg.model.create(payload);
