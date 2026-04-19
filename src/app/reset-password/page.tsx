@@ -1,11 +1,11 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button, Input } from "@/components/ui";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const initialToken = searchParams.get("token") ?? "";
   const [token, setToken] = useState(initialToken);
@@ -85,5 +85,21 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(6,182,212,0.2),_transparent_34%),linear-gradient(180deg,#030712_0%,#0f172a_100%)] px-4 py-16">
+          <div className="mx-auto max-w-lg rounded-3xl border border-white/15 bg-white/5 p-8 shadow-glow backdrop-blur-xl text-sm text-slate-300">
+            Loading reset form...
+          </div>
+        </main>
+      }
+    >
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
