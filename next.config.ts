@@ -1,8 +1,11 @@
 import type { NextConfig } from "next";
 
+const isVercel = process.env.VERCEL === "1";
+
 const nextConfig: NextConfig = {
-  // Keep dev and production build artifacts separate to avoid stale chunk collisions.
-  distDir: process.env.NODE_ENV === "production" ? ".next-prod" : ".next-dev",
+  // Vercel expects production output in `.next`.
+  // Local dev/prod keep separate directories to avoid stale chunk collisions on Windows.
+  distDir: isVercel ? ".next" : process.env.NODE_ENV === "production" ? ".next-prod" : ".next-dev",
   eslint: {
     ignoreDuringBuilds: true
   },
