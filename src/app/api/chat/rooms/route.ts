@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
-import { Project, Room, User } from "@/lib/models";
+import { Project, Room, Tenant, User } from "@/lib/models";
 import { requireApiAuth } from "@/lib/api-auth";
 import { fail, ok, safeJson } from "@/lib/http";
 import { sanitizeText } from "@/lib/security-api";
@@ -21,6 +21,34 @@ export async function GET(request: Request) {
     }
 
     await connectToDatabase();
+
+    const canJoinCommunity = ["student", "college_admin", "super_admin"].includes(authResult.auth.role);
+    if (canJoinCommunity) {
+      const tenant = await Tenant.findById(authResult.auth.tenantId).select("name").lean();
+      const participants = await User.find({
+        tenantId: authResult.auth.tenantId,
+        status: "active",
+        role: { $in: ["student", "college_admin"] }
+      })
+        .select("_id")
+        .lean();
+
+      const participantIds = participants.map((user) => user._id);
+      if (participantIds.length > 1) {
+        await Room.findOneAndUpdate(
+          {
+            tenantId: authResult.auth.tenantId,
+            type: "group",
+            title: `${tenant?.name ?? "College"} Community Room`
+          },
+          {
+            $set: { participantIds },
+            $setOnInsert: { creatorId: authResult.auth.userId }
+          },
+          { upsert: true }
+        );
+      }
+    }
 
     const rooms = await Room.find({
       tenantId: authResult.auth.tenantId,

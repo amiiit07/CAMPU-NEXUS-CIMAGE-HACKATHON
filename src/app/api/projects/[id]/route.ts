@@ -10,7 +10,7 @@ function validId(id: string) {
   return mongoose.Types.ObjectId.isValid(id);
 }
 
-async function findProjectByRole(id: string, auth: { tenantId: string; role: string }) {
+function findProjectByRole(id: string, auth: { tenantId: string; role: string }) {
   if (auth.role === "super_admin") {
     return Project.findById(id);
   }

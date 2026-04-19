@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Sparkles, ShieldCheck, Brain, Users } from "lucide-react";
+import { ArrowRight, Sparkles, ShieldCheck, Brain } from "lucide-react";
 import Link from "next/link";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 
@@ -113,16 +113,6 @@ export default function Hero() {
             </div>
           </div>
 
-          <motion.div
-            animate={{ y: [0, -8, 0] }}
-            transition={{ duration: 4.8, repeat: Infinity, ease: "easeInOut" }}
-            className="surface-glass absolute -left-8 -top-8 hidden rounded-2xl px-4 py-3 lg:block"
-          >
-            <div className="flex items-center gap-2 text-sm text-slate-200">
-              <Users className="h-4 w-4 text-brand-cyan" />
-              Cross-college team sync active
-            </div>
-          </motion.div>
         </motion.div>
       </div>
     </section>
